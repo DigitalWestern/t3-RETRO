@@ -1,4 +1,4 @@
-// This file mostly exists because we want dev mode to say "T3 Code (Dev)" instead of "electron"
+// This file mostly exists because we want dev mode to use the app's display name instead of "electron".
 
 import { spawnSync } from "node:child_process";
 import {
@@ -17,7 +17,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const isDevelopment = Boolean(process.env.VITE_DEV_SERVER_URL);
-const APP_DISPLAY_NAME = isDevelopment ? "T3 Code (Dev)" : "T3 Code (Alpha)";
+const APP_DISPLAY_NAME = "Retro AI Assistant";
 const APP_BUNDLE_ID = isDevelopment ? "com.t3tools.t3code.dev" : "com.t3tools.t3code";
 const LAUNCHER_VERSION = 2;
 
@@ -167,12 +167,6 @@ export function resolveElectronPath() {
   const electronBinaryPath = require("electron");
 
   if (process.platform !== "darwin") {
-    return electronBinaryPath;
-  }
-
-  // Dev launches do not need a renamed app bundle badly enough to risk breaking
-  // Electron helper resource lookup on macOS.
-  if (isDevelopment) {
     return electronBinaryPath;
   }
 

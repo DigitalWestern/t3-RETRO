@@ -95,10 +95,9 @@ const handleCheckForUpdatesMenuClick: Effect.Effect<
 }).pipe(Effect.withSpan("desktop.menu.handleCheckForUpdatesClick"));
 
 const make = Effect.gen(function* () {
-  const electronApp = yield* ElectronApp.ElectronApp;
   const electronMenu = yield* ElectronMenu.ElectronMenu;
   const environment = yield* DesktopEnvironment.DesktopEnvironment;
-  const appName = yield* electronApp.name;
+  const appName = environment.displayName;
   const context = yield* Effect.context<DesktopApplicationMenuRuntimeServices>();
   const runPromise = Effect.runPromiseWith(context);
 
