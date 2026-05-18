@@ -15,7 +15,7 @@ if ! command -v bun >/dev/null 2>&1; then
 fi
 
 busy_ports=()
-for port in 5733 13773; do
+for port in {5733..5740} {13773..13780}; do
   if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
     busy_ports+=("$port")
   fi
