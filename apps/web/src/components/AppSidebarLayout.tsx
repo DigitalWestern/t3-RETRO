@@ -46,10 +46,10 @@ function RetroToolbarButton({
       type="button"
       variant="ghost"
       disabled={disabled}
-      className="retro-toolbar-button h-[68px] min-w-[78px] flex-col gap-1 px-3 py-1.5"
+      className="retro-toolbar-button h-[62px] min-w-[74px] flex-col gap-1 px-2.5 py-1.5"
       onClick={onClick}
     >
-      <Icon className="size-7" />
+      <Icon className="size-6" />
       <span>{label}</span>
     </Button>
   );
@@ -108,10 +108,14 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
     <div className="retro-app-window flex h-dvh min-h-0 flex-col">
       <header className="retro-app-chrome drag-region shrink-0">
         <div className="retro-window-titlebar retro-global-titlebar">
-          <span className="retro-title-icon" aria-hidden="true">
-            ▤
-          </span>
-          <span className="truncate">{APP_BASE_NAME} - Codex Session</span>
+          <div className="retro-title-control-bay" aria-hidden="true">
+            <span className="retro-title-icon">▤</span>
+          </div>
+          <span className="retro-window-title truncate">{APP_BASE_NAME} - Codex Session</span>
+          <span
+            className="retro-title-control-bay retro-title-control-bay-spacer"
+            aria-hidden="true"
+          />
         </div>
         <div className="retro-menu-bar retro-global-menu">
           <span>File</span>

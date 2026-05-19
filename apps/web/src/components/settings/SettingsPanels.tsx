@@ -1,4 +1,12 @@
-import { ArchiveIcon, ArchiveX, LoaderIcon, PlusIcon, RefreshCwIcon } from "lucide-react";
+import {
+  ArchiveIcon,
+  ArchiveX,
+  CheckCircleIcon,
+  DownloadIcon,
+  LoaderIcon,
+  PlusIcon,
+  RefreshCwIcon,
+} from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useMemo, useRef, useState } from "react";
@@ -60,6 +68,7 @@ import {
   collectProviderUpdateCandidates,
   hasOneClickUpdateProviderCandidate,
   isProviderUpdateActive,
+  isProviderUpdateCandidate,
   type ProviderUpdateCandidate,
 } from "../ProviderUpdateLaunchNotification.logic";
 import { ProviderInstanceCard } from "./ProviderInstanceCard";
@@ -100,6 +109,11 @@ const TIMESTAMP_FORMAT_LABELS = {
 } as const;
 
 const DEFAULT_DRIVER_KIND = ProviderDriverKind.make("codex");
+
+function formatProviderVersion(value: string | null | undefined): string {
+  if (!value) return "Unknown";
+  return value.startsWith("v") ? value : `v${value}`;
+}
 
 function withoutProviderInstanceKey<V>(
   record: Readonly<Record<ProviderInstanceId, V>> | undefined,
@@ -1327,6 +1341,150 @@ export function ProviderSettingsPanel() {
         open={isAddInstanceDialogOpen}
         onOpenChange={setIsAddInstanceDialogOpen}
       />
+    </SettingsPageContainer>
+  );
+}
+
+export function UpdatesSettingsPanel() {
+  const serverProviders = useServerProviders();
+  const [updatingProviderInstances, setUpdatingProviderInstances] = useState<
+    ReadonlySet<ProviderInstanceId>
+  >(() => new Set());
+  const updateCandidates = useMemo(
+    () => serverProviders.filter(isProviderUpdateCandidate),
+    [serverProviders],
+  );
+
+  const runProviderUpdate = useCallback(async (candidate: ProviderUpdateCandidate) => {
+    let started = false;
+    setUpdatingProviderInstances((previous) => {
+      if (previous.has(candidate.instanceId)) {
+        return previous;
+      }
+      started = true;
+      const next = new Set(previous);
+      next.add(candidate.instanceId);
+      return next;
+    });
+    if (!started) {
+      return;
+    }
+
+    try {
+      await ensureLocalApi().server.updateProvider({
+        provider: candidate.driver,
+        instanceId: candidate.instanceId,
+      });
+    } catch (error) {
+      toastManager.add(
+        stackedThreadToast({
+          type: "error",
+          title: `Could not update ${PROVIDER_DISPLAY_NAMES[candidate.driver] ?? candidate.driver}`,
+          description:
+            error instanceof Error
+              ? error.message
+              : "The provider update command could not be started.",
+        }),
+      );
+    } finally {
+      setUpdatingProviderInstances((previous) => {
+        if (!previous.has(candidate.instanceId)) {
+          return previous;
+        }
+        const next = new Set(previous);
+        next.delete(candidate.instanceId);
+        return next;
+      });
+    }
+  }, []);
+
+  return (
+    <SettingsPageContainer>
+      <SettingsSection
+        title="Updates"
+        headerAction={
+          <Button render={<Link to="/settings/providers" />} size="xs" variant="outline">
+            Provider settings
+          </Button>
+        }
+      >
+        {updateCandidates.length === 0 ? (
+          <SettingsRow
+            title={
+              <span className="inline-flex items-center gap-2">
+                <CheckCircleIcon className="size-4 text-success" />
+                Up to date
+              </span>
+            }
+            description="No provider or model updates are currently available."
+          />
+        ) : (
+          updateCandidates.map((candidate) => {
+            const providerName = candidate.displayName?.trim()
+              ? candidate.displayName
+              : (PROVIDER_DISPLAY_NAMES[candidate.driver] ?? candidate.driver);
+            const currentVersion =
+              candidate.versionAdvisory.currentVersion ?? candidate.version ?? null;
+            const latestVersion = candidate.versionAdvisory.latestVersion;
+            const isUpdating =
+              updatingProviderInstances.has(candidate.instanceId) ||
+              isProviderUpdateActive(candidate);
+            const canRunUpdate = canOneClickUpdateProviderCandidate(candidate, serverProviders);
+            const updateCommand = candidate.versionAdvisory.updateCommand;
+
+            return (
+              <SettingsRow
+                key={candidate.instanceId}
+                title={
+                  <span className="inline-flex items-center gap-2">
+                    <DownloadIcon className="size-4 text-warning" />
+                    {providerName}
+                  </span>
+                }
+                description={
+                  <span className="flex flex-col gap-1">
+                    <span>
+                      Current:{" "}
+                      <code className="text-[11px]">{formatProviderVersion(currentVersion)}</code>{" "}
+                      {"->"} Latest:{" "}
+                      <code className="text-[11px]">{formatProviderVersion(latestVersion)}</code>
+                    </span>
+                    {canRunUpdate ? null : (
+                      <span>
+                        This provider cannot be updated automatically here
+                        {updateCommand ? `; run ${updateCommand} manually.` : "."}
+                      </span>
+                    )}
+                  </span>
+                }
+                control={
+                  canRunUpdate ? (
+                    <Button
+                      size="xs"
+                      variant="default"
+                      disabled={isUpdating}
+                      onClick={() => void runProviderUpdate(candidate)}
+                    >
+                      {isUpdating ? (
+                        <>
+                          <LoaderIcon className="size-3 animate-spin" />
+                          Updating
+                        </>
+                      ) : (
+                        "Update now"
+                      )}
+                    </Button>
+                  ) : (
+                    <Button render={<Link to="/settings/providers" />} size="xs" variant="outline">
+                      Review
+                    </Button>
+                  )
+                }
+              />
+            );
+          })
+        )}
+      </SettingsSection>
     </SettingsPageContainer>
   );
 }

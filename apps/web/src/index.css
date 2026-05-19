@@ -213,15 +213,15 @@ code {
 
 @layer components {
   .retro-window-titlebar {
-    display: flex;
-    min-height: 28px;
+    display: grid;
+    min-height: 34px;
+    grid-template-columns: minmax(132px, auto) minmax(0, 1fr) minmax(132px, auto);
     align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
+    gap: 0.75rem;
     border-bottom: 1px solid var(--retro-chrome-darker);
     background: var(--retro-title);
     color: var(--retro-title-text);
-    padding: 0 0.35rem 0 0.55rem;
+    padding: 0 0.7rem 0 0.8rem;
     font-weight: 700;
     font-size: 14px;
     letter-spacing: 0;
@@ -243,10 +243,27 @@ code {
   }
 
   .retro-global-titlebar {
-    min-height: 32px;
-    padding-left: 0.45rem;
+    min-height: 38px;
     font-size: 16px;
     box-shadow: inset 1px 1px #1938a4;
+  }
+
+  .retro-title-control-bay {
+    display: inline-flex;
+    min-height: 28px;
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: 0.05rem;
+  }
+
+  .retro-title-control-bay-spacer {
+    justify-self: stretch;
+  }
+
+  .retro-window-title {
+    min-width: 0;
+    justify-self: center;
+    text-align: center;
   }
 
   .retro-title-icon {
@@ -294,10 +311,10 @@ code {
 
   .retro-menu-bar {
     display: flex;
-    min-height: 31px;
+    min-height: 39px;
     align-items: center;
-    gap: 1.25rem;
-    padding: 0 0.75rem;
+    gap: 1.55rem;
+    padding: 3px 0.95rem 6px;
     font-size: 15px;
   }
 
@@ -313,10 +330,10 @@ code {
 
   .retro-address-bar {
     display: flex;
-    min-height: 31px;
+    min-height: 39px;
     align-items: center;
-    gap: 0.35rem;
-    padding: 3px 0.45rem;
+    gap: 0.55rem;
+    padding: 6px 0.65rem;
     font-size: 14px;
   }
 
@@ -366,20 +383,20 @@ code {
 
   .retro-main-toolbar {
     display: flex;
-    min-height: 76px;
-    align-items: stretch;
-    gap: 0;
+    min-height: 82px;
+    align-items: center;
+    gap: 2px;
     overflow-x: auto;
     border-top: 1px solid #ffffff;
     border-bottom: 1px solid #808080;
     background: #c0c0c0;
-    padding: 4px 6px;
+    padding: 6px 10px;
     box-shadow: inset 0 -1px #ffffff;
   }
 
   .retro-main-toolbar .retro-toolbar-button {
     -webkit-app-region: no-drag;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
   }
 

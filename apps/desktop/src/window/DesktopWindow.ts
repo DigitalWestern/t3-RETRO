@@ -96,7 +96,7 @@ function getWindowTitleBarOptions(shouldUseDarkColors: boolean): WindowTitleBarO
   if (process.platform === "darwin") {
     return {
       titleBarStyle: "hiddenInset",
-      trafficLightPosition: { x: 16, y: 18 },
+      trafficLightPosition: { x: 42, y: 13 },
     };
   }
 
