@@ -4,6 +4,7 @@ const originalWindow = globalThis.window;
 
 afterEach(() => {
   vi.resetModules();
+  vi.unstubAllEnvs();
 
   if (originalWindow === undefined) {
     Reflect.deleteProperty(globalThis, "window");
@@ -43,7 +44,14 @@ describe("branding", () => {
     expect(branding.HOSTED_APP_CHANNEL).toBe("nightly");
     expect(branding.HOSTED_APP_CHANNEL_LABEL).toBe("Nightly");
     expect(branding.APP_STAGE_LABEL).toBe("Nightly");
-    expect(branding.APP_DISPLAY_NAME).toBe("T3 Code (Nightly)");
+    expect(branding.APP_DISPLAY_NAME).toBe("Retro AI Assistant (Nightly)");
+  });
+
+  it("uses Retro AI Assistant as the web fallback brand", async () => {
+    const branding = await import("./branding");
+
+    expect(branding.APP_BASE_NAME).toBe("Retro AI Assistant");
+    expect(branding.APP_DISPLAY_NAME).toBe("Retro AI Assistant (Dev)");
   });
 
   it("ignores unknown hosted app channels", async () => {

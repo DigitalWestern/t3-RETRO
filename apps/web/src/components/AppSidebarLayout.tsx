@@ -19,6 +19,7 @@ import {
   clearShortcutModifierState,
   syncShortcutModifierStateFromKeyboardEvent,
 } from "../shortcutModifierState";
+import { APP_BASE_NAME } from "../branding";
 import { useCommandPaletteStore } from "../commandPaletteStore";
 import { useHandleNewThread } from "../hooks/useHandleNewThread";
 import { Button } from "./ui/button";
@@ -110,7 +111,7 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
           <span className="retro-title-icon" aria-hidden="true">
             ▤
           </span>
-          <span className="truncate">T3 Code - Codex Session</span>
+          <span className="truncate">{APP_BASE_NAME} - Codex Session</span>
         </div>
         <div className="retro-menu-bar retro-global-menu">
           <span>File</span>
@@ -159,7 +160,7 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
             onClick={() => dispatchRetroCommand("interrupt")}
           />
           <div className="retro-toolbar-separator" />
-          <RetroToolbarButton icon={MonitorIcon} label="Tacka" disabled />
+          <RetroToolbarButton icon={MonitorIcon} label="Tasks" disabled />
           <RetroToolbarButton icon={ArchiveIcon} label="Archive" disabled />
           <RetroToolbarButton icon={Trash2Icon} label="Delete" disabled />
         </div>
@@ -168,7 +169,7 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
           <span className="retro-address-document" aria-hidden="true">
             ▧
           </span>
-          <span className="retro-address-field truncate">t3code://session/active</span>
+          <span className="retro-address-field truncate">retroai://session/active</span>
         </div>
       </header>
       <SidebarProvider

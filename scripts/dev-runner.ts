@@ -22,7 +22,7 @@ const BASE_WEB_PORT = 5733;
 const MAX_HASH_OFFSET = 3000;
 const MAX_PORT = 65535;
 const DESKTOP_DEV_LOOPBACK_HOST = "127.0.0.1";
-const DEV_PORT_PROBE_HOSTS = ["127.0.0.1", "0.0.0.0", "::1", "::"] as const;
+const DEV_PORT_PROBE_HOSTS = ["127.0.0.1", "::1"] as const;
 
 export const DEFAULT_T3_HOME = Effect.map(Effect.service(Path.Path), (path) =>
   path.join(NodeOS.homedir(), ".t3"),
@@ -160,16 +160,15 @@ export function createDevRunnerEnv({
     const output: NodeJS.ProcessEnv = {
       ...baseEnv,
       PORT: String(webPort),
-      VITE_DEV_SERVER_URL:
-        devUrl?.toString() ??
-        `http://${isDesktopMode ? DESKTOP_DEV_LOOPBACK_HOST : "localhost"}:${webPort}`,
+      VITE_DEV_SERVER_URL: devUrl?.toString() ?? `http://${DESKTOP_DEV_LOOPBACK_HOST}:${webPort}`,
       T3CODE_HOME: resolvedBaseDir,
     };
 
     if (!isDesktopMode) {
+      const serverHost = host ?? DESKTOP_DEV_LOOPBACK_HOST;
       output.T3CODE_PORT = String(serverPort);
-      output.VITE_HTTP_URL = `http://localhost:${serverPort}`;
-      output.VITE_WS_URL = `ws://localhost:${serverPort}`;
+      output.VITE_HTTP_URL = `http://${serverHost}:${serverPort}`;
+      output.VITE_WS_URL = `ws://${serverHost}:${serverPort}`;
     } else {
       output.T3CODE_PORT = String(serverPort);
       output.VITE_HTTP_URL = `http://${DESKTOP_DEV_LOOPBACK_HOST}:${serverPort}`;
@@ -179,8 +178,8 @@ export function createDevRunnerEnv({
       delete output.T3CODE_HOST;
     }
 
-    if (!isDesktopMode && host !== undefined) {
-      output.T3CODE_HOST = host;
+    if (!isDesktopMode) {
+      output.T3CODE_HOST = host ?? DESKTOP_DEV_LOOPBACK_HOST;
     }
 
     if (!isDesktopMode && noBrowser !== undefined) {
@@ -214,6 +213,8 @@ export function createDevRunnerEnv({
     if (isDesktopMode) {
       output.HOST = DESKTOP_DEV_LOOPBACK_HOST;
       delete output.T3CODE_DESKTOP_WS_URL;
+    } else {
+      output.HOST = host ?? DESKTOP_DEV_LOOPBACK_HOST;
     }
 
     return output;
@@ -438,6 +439,11 @@ export function runDevRunnerWithInput(input: DevRunnerCliInput) {
       return;
     }
 
+    const path = yield* Path.Path;
+    const localBinPath = path.join(process.cwd(), "node_modules", ".bin");
+    const pathDelimiter = process.platform === "win32" ? ";" : ":";
+    const nextPath = env.PATH ? `${localBinPath}${pathDelimiter}${env.PATH}` : localBinPath;
+
     const child = yield* ChildProcess.make(
       "turbo",
       [...MODE_ARGS[input.mode], ...input.turboArgs],
@@ -445,7 +451,10 @@ export function runDevRunnerWithInput(input: DevRunnerCliInput) {
         stdin: "inherit",
         stdout: "inherit",
         stderr: "inherit",
-        env,
+        env: {
+          ...env,
+          PATH: nextPath,
+        },
         extendEnv: false,
         // Windows needs shell mode to resolve .cmd shims (e.g. bun.cmd).
         shell: process.platform === "win32",

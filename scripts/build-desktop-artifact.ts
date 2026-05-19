@@ -394,6 +394,7 @@ function stageMacIcons(stageResourcesDir: string, sourcePng: string, verbose: bo
   return Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
+    const repoRoot = yield* RepoRoot;
     if (!(yield* fs.exists(sourcePng))) {
       return yield* new BuildScriptError({
         message: `Desktop macOS icon source is missing at ${sourcePng}`,
@@ -412,6 +413,12 @@ function stageMacIcons(stageResourcesDir: string, sourcePng: string, verbose: bo
         ...commandOutputOptions(verbose),
       })`sips -z 512 512 ${sourcePng} --out ${iconPngPath}`,
     );
+
+    const bundledIconPath = path.join(repoRoot, "apps/desktop/resources/icon.icns");
+    if (yield* fs.exists(bundledIconPath)) {
+      yield* fs.copyFile(bundledIconPath, iconIcnsPath);
+      return;
+    }
 
     yield* generateMacIconSet(sourcePng, iconIcnsPath, tmpRoot, path, verbose);
   });
@@ -848,14 +855,22 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
   yield* Effect.log(
     `[desktop-artifact] Building ${options.platform}/${options.target} (arch=${options.arch}, version=${appVersion})...`,
   );
+  const electronBuilderBin =
+    process.platform === "win32"
+      ? path.join(repoRoot, "node_modules/.bin/electron-builder.cmd")
+      : path.join(repoRoot, "node_modules/.bin/electron-builder");
   yield* runCommand(
-    ChildProcess.make({
-      cwd: stageAppDir,
-      env: buildEnv,
-      ...commandOutputOptions(options.verbose),
-      // Windows needs shell mode to resolve .cmd shims.
-      shell: process.platform === "win32",
-    })`bun x --install=fallback electron-builder ${platformConfig.cliFlag} --${options.arch} --publish never`,
+    ChildProcess.make(
+      "bun",
+      [electronBuilderBin, platformConfig.cliFlag, `--${options.arch}`, "--publish", "never"],
+      {
+        cwd: stageAppDir,
+        env: buildEnv,
+        ...commandOutputOptions(options.verbose),
+        // Windows needs shell mode to resolve .cmd shims.
+        shell: process.platform === "win32",
+      },
+    ),
   );
 
   const stageDistDir = path.join(stageAppDir, "dist");

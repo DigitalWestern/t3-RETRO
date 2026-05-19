@@ -15,9 +15,9 @@
   ],
   "type": "module",
   "scripts": {
-    "dev": "node --watch src/bin.ts",
+    "dev": "node src/bin.ts",
     "build": "node scripts/cli.ts build",
-    "build:bundle": "tsdown",
+    "build:bundle": "bun node_modules/.bin/tsdown",
     "start": "node dist/bin.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"

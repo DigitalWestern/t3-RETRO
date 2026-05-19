@@ -48,6 +48,19 @@ We are not accepting contributions yet.
 
 Observability guide: [docs/observability.md](./docs/observability.md)
 
+## Local development
+
+Start the web UI and backend together:
+
+```bash
+bun dev -- --no-browser
+```
+
+The dev runner binds the local UI to `http://127.0.0.1:5733` and the backend to
+`http://127.0.0.1:13773`. In sandboxed Codex sessions, local port binding may
+still require approval, but the command should not require manual PATH, port, or
+watcher workarounds.
+
 ## If you REALLY want to contribute still.... read this first
 
 Before local development, prepare the environment and install dependencies:
