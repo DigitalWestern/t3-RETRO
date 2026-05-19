@@ -95,7 +95,9 @@ export const make = () => {
   /**
    * Returns true when a TCP server can bind to {host, port}.
    * `EADDRNOTAVAIL` is treated as available so IPv6-absent hosts don't fail
-   * loopback availability checks.
+   * loopback availability checks. Some sandboxes deny short-lived probe binds
+   * with `EPERM`; treat that as inconclusive so the real server bind can report
+   * the actual startup error instead of making every port look occupied.
    */
   const canListenOnHost = (port: number, host: string): Effect.Effect<boolean> =>
     Effect.callback<boolean>((resume) => {
@@ -111,7 +113,10 @@ export const make = () => {
       server.unref();
 
       server.once("error", (cause) => {
-        if (isErrnoExceptionWithCode(cause) && cause.code === "EADDRNOTAVAIL") {
+        if (
+          isErrnoExceptionWithCode(cause) &&
+          (cause.code === "EADDRNOTAVAIL" || cause.code === "EPERM")
+        ) {
           settle(true);
           return;
         }

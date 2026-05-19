@@ -1942,14 +1942,11 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
     <form
       ref={composerFormRef}
       onSubmit={submitComposer}
-      className="mx-auto w-full min-w-0 max-w-208"
+      className="mx-0 w-full min-w-0 max-w-none"
       data-chat-composer-form="true"
     >
       <div
-        className={cn(
-          "group rounded-[22px] p-px transition-colors duration-200",
-          composerProviderState.composerFrameClassName,
-        )}
+        className={cn("group p-px transition-none", composerProviderState.composerFrameClassName)}
         onDragEnter={onComposerDragEnter}
         onDragOver={onComposerDragOver}
         onDragLeave={onComposerDragLeave}
@@ -1959,8 +1956,8 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
           ref={composerSurfaceRef}
           data-chat-composer-mobile-collapsed={isComposerCollapsedMobile ? "true" : "false"}
           className={cn(
-            "rounded-[20px] border bg-card transition-colors duration-200 has-focus-visible:border-ring/45",
-            isDragOverComposer ? "border-primary/70 bg-accent/30" : "border-border",
+            "border bg-[#cfe1ff] transition-none has-focus-visible:border-ring",
+            isDragOverComposer ? "border-primary bg-accent" : "border-[#7b9fd5]",
             environmentUnavailable ? "opacity-75" : null,
             composerProviderState.composerSurfaceClassName,
           )}
@@ -1985,14 +1982,14 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
         >
           {!isComposerCollapsedMobile &&
             (activePendingApproval ? (
-              <div className="rounded-t-[19px] border-b border-border/65 bg-muted/20">
+              <div className="border-b border-[#7b9fd5] bg-[#dfeaff]">
                 <ComposerPendingApprovalPanel
                   approval={activePendingApproval}
                   pendingCount={pendingApprovals.length}
                 />
               </div>
             ) : pendingUserInputs.length > 0 ? (
-              <div className="rounded-t-[19px] border-b border-border/65 bg-muted/20">
+              <div className="border-b border-[#7b9fd5] bg-[#dfeaff]">
                 <ComposerPendingUserInputPanel
                   pendingUserInputs={pendingUserInputs}
                   respondingRequestIds={respondingRequestIds}
@@ -2003,7 +2000,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                 />
               </div>
             ) : showPlanFollowUpPrompt && activeProposedPlan ? (
-              <div className="rounded-t-[19px] border-b border-border/65 bg-muted/20">
+              <div className="border-b border-[#7b9fd5] bg-[#dfeaff]">
                 <ComposerPlanFollowUpBanner
                   key={activeProposedPlan.id}
                   planTitle={proposedPlanTitle(activeProposedPlan.planMarkdown) ?? null}
@@ -2013,7 +2010,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
 
           {isComposerCollapsedMobile && activePendingApproval ? (
             <div
-              className="rounded-t-[19px] border-b border-border/65 bg-muted/20"
+              className="border-b border-[#7b9fd5] bg-[#dfeaff]"
               data-chat-composer-collapsed-controls="true"
             >
               <ComposerPendingApprovalPanel
@@ -2030,7 +2027,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
             </div>
           ) : isComposerCollapsedMobile && pendingUserInputs.length > 0 ? (
             <div
-              className="rounded-t-[19px] border-b border-border/65 bg-muted/20"
+              className="border-b border-[#7b9fd5] bg-[#dfeaff]"
               data-chat-composer-collapsed-controls="true"
             >
               <ComposerPendingUserInputPanel
@@ -2225,50 +2222,56 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
               )}
 
             <div className="relative">
-              <ComposerPromptEditor
-                editorRef={composerEditorRef}
-                value={
-                  isComposerApprovalState
-                    ? ""
-                    : activePendingProgress
-                      ? activePendingProgress.customAnswer
-                      : prompt
-                }
-                cursor={composerCursor}
-                terminalContexts={
-                  !isComposerApprovalState && pendingUserInputs.length === 0
-                    ? composerTerminalContexts
-                    : []
-                }
-                skills={selectedProviderStatus?.skills ?? []}
-                {...(showMobilePendingAnswerActions ? { className: "max-sm:pb-11" } : {})}
-                onRemoveTerminalContext={removeComposerTerminalContextFromDraft}
-                onChange={onPromptChange}
-                onCommandKeyDown={onComposerCommandKey}
-                onPaste={onComposerPaste}
-                placeholder={
-                  isComposerApprovalState
-                    ? (activePendingApproval?.detail ?? "Resolve this approval request to continue")
-                    : activePendingProgress
-                      ? "Type your own answer, or leave this blank to use the selected option"
-                      : showPlanFollowUpPrompt && activeProposedPlan
-                        ? "Add feedback to refine the plan, or leave this blank to implement it"
-                        : environmentUnavailable
-                          ? `${environmentUnavailable.label} is ${
-                              environmentUnavailable.connectionState === "connecting"
-                                ? "connecting"
-                                : "disconnected"
-                            }`
-                          : phase === "disconnected"
-                            ? "Ask for follow-up changes or attach images"
-                            : "Ask anything, @tag files/folders, $use skills, or / for commands"
-                }
-                disabled={
-                  isConnecting ||
-                  isComposerApprovalState ||
-                  (environmentUnavailable !== null && activePendingProgress === null)
-                }
-              />
+              <div className="mb-1 text-xs font-bold text-black">
+                Enter your instruction or request:
+              </div>
+              <div data-chat-composer-editor-frame="true" className="bg-white p-2">
+                <ComposerPromptEditor
+                  editorRef={composerEditorRef}
+                  value={
+                    isComposerApprovalState
+                      ? ""
+                      : activePendingProgress
+                        ? activePendingProgress.customAnswer
+                        : prompt
+                  }
+                  cursor={composerCursor}
+                  terminalContexts={
+                    !isComposerApprovalState && pendingUserInputs.length === 0
+                      ? composerTerminalContexts
+                      : []
+                  }
+                  skills={selectedProviderStatus?.skills ?? []}
+                  {...(showMobilePendingAnswerActions ? { className: "max-sm:pb-11" } : {})}
+                  onRemoveTerminalContext={removeComposerTerminalContextFromDraft}
+                  onChange={onPromptChange}
+                  onCommandKeyDown={onComposerCommandKey}
+                  onPaste={onComposerPaste}
+                  placeholder={
+                    isComposerApprovalState
+                      ? (activePendingApproval?.detail ??
+                        "Resolve this approval request to continue")
+                      : activePendingProgress
+                        ? "Type your own answer, or leave this blank to use the selected option"
+                        : showPlanFollowUpPrompt && activeProposedPlan
+                          ? "Add feedback to refine the plan, or leave this blank to implement it"
+                          : environmentUnavailable
+                            ? `${environmentUnavailable.label} is ${
+                                environmentUnavailable.connectionState === "connecting"
+                                  ? "connecting"
+                                  : "disconnected"
+                              }`
+                            : phase === "disconnected"
+                              ? "Ask for follow-up changes or attach images"
+                              : "Ask anything, @tag files/folders, $use skills, or / for commands"
+                  }
+                  disabled={
+                    isConnecting ||
+                    isComposerApprovalState ||
+                    (environmentUnavailable !== null && activePendingProgress === null)
+                  }
+                />
+              </div>
               {showMobilePendingAnswerActions ? (
                 <div
                   data-chat-composer-mobile-pending-actions="true"
@@ -2309,7 +2312,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
               data-chat-composer-footer="true"
               data-chat-composer-footer-compact={isComposerFooterCompact ? "true" : "false"}
               className={cn(
-                "flex min-w-0 flex-nowrap items-center justify-between gap-2 overflow-visible px-2.5 pb-2.5 sm:px-3 sm:pb-3",
+                "mt-2 flex min-w-0 flex-nowrap items-center justify-between gap-2 overflow-visible border-t border-[#7b9fd5] bg-[#dfeaff] px-2 py-1",
                 isComposerFooterCompact ? "gap-1.5" : "gap-2 sm:gap-0",
                 showMobilePendingAnswerActions && "hidden sm:flex",
               )}

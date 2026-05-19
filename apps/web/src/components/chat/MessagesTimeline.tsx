@@ -246,7 +246,7 @@ export const MessagesTimeline = memo(function MessagesTimeline({
   // from TimelineRowCtx, which propagates through LegendList's memo.
   const renderItem = useCallback(
     ({ item }: { item: MessagesTimelineRow }) => (
-      <div className="mx-auto w-full min-w-0 max-w-3xl overflow-x-clip" data-timeline-root="true">
+      <div className="w-full min-w-0 overflow-x-clip" data-timeline-root="true">
         <TimelineRowContent row={item} />
       </div>
     ),
@@ -277,7 +277,7 @@ export const MessagesTimeline = memo(function MessagesTimeline({
           maintainScrollAtEndThreshold={0.1}
           maintainVisibleContentPosition
           onScroll={handleScroll}
-          className="h-full overflow-x-hidden overscroll-y-contain px-3 sm:px-5"
+          className="h-full overflow-x-hidden overscroll-y-contain bg-white px-2 sm:px-3"
           ListHeaderComponent={TIMELINE_LIST_HEADER}
           ListFooterComponent={TIMELINE_LIST_FOOTER}
         />
@@ -330,15 +330,18 @@ function UserTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "message" 
   const canRevertAgentWork = typeof row.revertTurnCount === "number";
 
   return (
-    <div className="flex justify-end">
-      <div className="group relative max-w-[80%] rounded-2xl rounded-br-sm border border-border bg-secondary px-4 py-3">
+    <div className="flex justify-stretch">
+      <div className="retro-message-box group relative w-full px-3 py-2">
+        <div className="retro-message-title -mx-3 -mt-2 mb-2 flex items-center gap-2 px-3 py-1 text-xs">
+          <span>You</span>
+          <span className="font-normal text-black">
+            ({formatTimestamp(row.message.createdAt, ctx.timestampFormat)})
+          </span>
+        </div>
         {userImages.length > 0 && (
           <div className="mb-2 grid max-w-[420px] grid-cols-2 gap-2">
             {userImages.map((image: NonNullable<TimelineMessage["attachments"]>[number]) => (
-              <div
-                key={image.id}
-                className="overflow-hidden rounded-lg border border-border/80 bg-background/70"
-              >
+              <div key={image.id} className="overflow-hidden border border-border bg-background">
                 {image.previewUrl ? (
                   <button
                     type="button"
@@ -371,13 +374,13 @@ function UserTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "message" 
           skills={ctx.skills}
           footer={
             <>
-              <div className="flex items-center gap-1.5 opacity-0 transition-opacity duration-200 focus-within:opacity-100 group-hover:opacity-100">
+              <div className="flex items-center gap-1.5 opacity-0 transition-none focus-within:opacity-100 group-hover:opacity-100">
                 {displayedUserMessage.copyText && (
                   <MessageCopyButton text={displayedUserMessage.copyText} />
                 )}
                 {canRevertAgentWork && <RevertUserMessageButton messageId={row.message.id} />}
               </div>
-              <p className="text-right text-xs text-muted-foreground/50">
+              <p className="text-right text-xs text-muted-foreground">
                 {formatTimestamp(row.message.createdAt, ctx.timestampFormat)}
               </p>
             </>
@@ -415,7 +418,13 @@ function AssistantTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "mess
       {row.showCompletionDivider && (
         <AssistantCompletionDivider completionSummary={row.completionSummary} />
       )}
-      <div className="min-w-0 px-1 py-0.5">
+      <div className="retro-message-box min-w-0 px-3 py-2">
+        <div className="retro-message-title -mx-3 -mt-2 mb-2 flex items-center gap-2 px-3 py-1 text-xs">
+          <span>Codex</span>
+          <span className="font-normal text-black">
+            ({formatTimestamp(row.message.createdAt, ctx.timestampFormat)})
+          </span>
+        </div>
         <ChatMarkdown
           text={messageText}
           cwd={ctx.markdownCwd}
@@ -428,8 +437,8 @@ function AssistantTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "mess
           resolvedTheme={ctx.resolvedTheme}
           onOpenTurnDiff={ctx.onOpenTurnDiff}
         />
-        <div className="mt-1.5 flex items-center gap-2">
-          <p className="text-[10px] text-muted-foreground/30">
+        <div className="mt-1.5 flex items-center gap-2 border-t border-[#c0c0c0] pt-1">
+          <p className="text-[10px] text-muted-foreground">
             {row.message.streaming ? (
               <LiveMessageMeta
                 createdAt={row.message.createdAt}
@@ -453,9 +462,9 @@ function AssistantTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "mess
 
 function AssistantCompletionDivider({ completionSummary }: { completionSummary: string | null }) {
   return (
-    <div className="my-3 flex items-center gap-3">
+    <div className="my-2 flex items-center gap-3">
       <span className="h-px flex-1 bg-border" />
-      <span className="rounded-full border border-border bg-background px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-muted-foreground/80">
+      <span className="border border-border bg-[var(--retro-chrome)] px-2.5 py-1 text-[10px] uppercase tracking-[0.08em] text-black">
         {completionSummary ? `Response • ${completionSummary}` : "Response"}
       </span>
       <span className="h-px flex-1 bg-border" />

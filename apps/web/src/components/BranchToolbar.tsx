@@ -241,21 +241,23 @@ export const BranchToolbar = memo(function BranchToolbar({
   if (!hasActiveThread || !activeProject) return null;
 
   return (
-    <div className="mx-auto flex w-full max-w-208 items-center gap-2 px-2.5 pb-3 pt-1 sm:px-3">
+    <div className="flex w-full items-stretch gap-1 border-t border-[#707070] bg-[var(--retro-chrome)] px-1 py-1 text-xs">
       {isMobile ? (
-        <MobileRunContextSelector
-          envLocked={envLocked}
-          envModeLocked={envModeLocked}
-          environmentId={environmentId}
-          availableEnvironments={availableEnvironments}
-          showEnvironmentPicker={showEnvironmentPicker}
-          onEnvironmentChange={onEnvironmentChange}
-          effectiveEnvMode={effectiveEnvMode}
-          activeWorktreePath={activeWorktreePath}
-          onEnvModeChange={onEnvModeChange}
-        />
+        <div className="retro-status-cell flex min-w-0 flex-1 items-center">
+          <MobileRunContextSelector
+            envLocked={envLocked}
+            envModeLocked={envModeLocked}
+            environmentId={environmentId}
+            availableEnvironments={availableEnvironments}
+            showEnvironmentPicker={showEnvironmentPicker}
+            onEnvironmentChange={onEnvironmentChange}
+            effectiveEnvMode={effectiveEnvMode}
+            activeWorktreePath={activeWorktreePath}
+            onEnvModeChange={onEnvModeChange}
+          />
+        </div>
       ) : (
-        <div className="flex min-w-0 shrink-0 items-center gap-1">
+        <div className="retro-status-cell flex min-w-0 shrink-0 items-center gap-1">
           {showEnvironmentPicker && availableEnvironments && onEnvironmentChange && (
             <>
               <BranchToolbarEnvironmentSelector
@@ -264,7 +266,7 @@ export const BranchToolbar = memo(function BranchToolbar({
                 availableEnvironments={availableEnvironments}
                 onEnvironmentChange={onEnvironmentChange}
               />
-              <Separator orientation="vertical" className="mx-0.5 h-3.5!" />
+              <Separator orientation="vertical" className="mx-0.5 h-3.5! bg-[#707070]" />
             </>
           )}
           <BranchToolbarEnvModeSelector
@@ -277,7 +279,7 @@ export const BranchToolbar = memo(function BranchToolbar({
       )}
 
       <BranchToolbarBranchSelector
-        className="min-w-0 flex-1 justify-end md:ml-auto md:flex-none"
+        className="retro-status-cell min-w-0 flex-1 justify-end md:ml-auto md:flex-none"
         environmentId={environmentId}
         threadId={threadId}
         {...(draftId ? { draftId } : {})}

@@ -6,9 +6,9 @@
   "main": "dist-electron/main.cjs",
   "scripts": {
     "dev": "bun run --parallel dev:bundle dev:electron",
-    "dev:bundle": "tsdown --watch",
+    "dev:bundle": "bun node_modules/.bin/tsdown --watch",
     "dev:electron": "node scripts/dev-electron.mjs",
-    "build": "tsdown",
+    "build": "bun node_modules/.bin/tsdown",
     "start": "node scripts/start-electron.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",

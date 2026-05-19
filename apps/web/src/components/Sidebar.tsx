@@ -2445,26 +2445,24 @@ function SortableProjectItem({
 }
 
 const SidebarChromeHeader = memo(function SidebarChromeHeader({
-  isElectron,
+  isElectron: _isElectron,
 }: {
   isElectron: boolean;
 }) {
   const wordmark = (
-    <div className="flex items-center gap-2">
+    <div className="flex min-w-0 items-center gap-2">
       <SidebarTrigger className="shrink-0 md:hidden" />
       <Tooltip>
         <TooltipTrigger
           render={
             <Link
               aria-label="Go to threads"
-              className="ml-1 flex min-w-0 flex-1 cursor-pointer items-center gap-1 rounded-md outline-hidden ring-ring transition-colors hover:text-foreground focus-visible:ring-2"
+              className="ml-1 flex min-w-0 flex-1 cursor-pointer items-center gap-1 rounded-none px-1 text-white outline-hidden hover:text-white focus-visible:ring-2"
               to="/"
             >
               <T3Wordmark />
-              <span className="truncate text-sm font-medium tracking-tight text-muted-foreground">
-                Code
-              </span>
-              <span className="rounded-full bg-muted/50 px-1.5 py-0.5 text-[8px] font-medium uppercase tracking-[0.18em] text-muted-foreground/60">
+              <span className="truncate text-sm font-bold tracking-tight text-white">Code</span>
+              <span className="border border-white/70 bg-[#c0c0c0] px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.08em] text-black">
                 {APP_STAGE_LABEL}
               </span>
             </Link>
@@ -2477,13 +2475,7 @@ const SidebarChromeHeader = memo(function SidebarChromeHeader({
     </div>
   );
 
-  return isElectron ? (
-    <SidebarHeader className="drag-region h-[52px] flex-row items-center gap-2 px-4 py-0 pl-[90px] wco:h-[env(titlebar-area-height)] wco:pl-[calc(env(titlebar-area-x)+1em)]">
-      {wordmark}
-    </SidebarHeader>
-  ) : (
-    <SidebarHeader className="gap-3 px-3 py-2 sm:gap-2.5 sm:px-4 sm:py-3">{wordmark}</SidebarHeader>
-  );
+  return <SidebarHeader className="hidden">{wordmark}</SidebarHeader>;
 });
 
 const SidebarChromeFooter = memo(function SidebarChromeFooter() {
@@ -2497,14 +2489,14 @@ const SidebarChromeFooter = memo(function SidebarChromeFooter() {
   }, [isMobile, navigate, setOpenMobile]);
 
   return (
-    <SidebarFooter className="p-2">
+    <SidebarFooter className="border-t border-[#707070] bg-[var(--retro-chrome)] p-1">
       <SidebarProviderUpdatePill />
       <SidebarUpdatePill />
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton
             size="sm"
-            className="gap-2 px-2 py-1.5 text-muted-foreground/70 hover:bg-accent hover:text-foreground"
+            className="gap-2 px-2 py-1.5 text-black"
             onClick={handleSettingsClick}
           >
             <SettingsIcon className="size-3.5" />
@@ -2621,7 +2613,7 @@ const SidebarProjectsContent = memo(function SidebarProjectsContent(
   );
 
   return (
-    <SidebarContent className="gap-0">
+    <SidebarContent className="gap-0 bg-[var(--retro-chrome)]">
       <SidebarGroup className="px-2 pt-2 pb-1">
         <SidebarMenu>
           <SidebarMenuItem>
@@ -2629,7 +2621,7 @@ const SidebarProjectsContent = memo(function SidebarProjectsContent(
               render={
                 <SidebarMenuButton
                   size="sm"
-                  className="gap-2 px-2 py-1.5 text-muted-foreground/70 hover:bg-accent hover:text-foreground focus-visible:ring-0"
+                  className="gap-2 px-2 py-1.5 text-black focus-visible:ring-0"
                   data-testid="command-palette-trigger"
                 />
               }
@@ -2669,10 +2661,8 @@ const SidebarProjectsContent = memo(function SidebarProjectsContent(
         </SidebarGroup>
       ) : null}
       <SidebarGroup className="px-2 py-2">
-        <div className="mb-1 flex items-center justify-between pl-2 pr-1.5">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60">
-            Projects
-          </span>
+        <div className="retro-section-header mb-0 flex items-center justify-between px-2 py-1">
+          <span className="text-xs font-bold">Projects</span>
           <div className="flex items-center gap-1">
             <ProjectSortMenu
               projectSortOrder={projectSortOrder}
@@ -2691,8 +2681,9 @@ const SidebarProjectsContent = memo(function SidebarProjectsContent(
                     type="button"
                     aria-label="Add project"
                     data-testid="sidebar-add-project-trigger"
-                    className="inline-flex size-5 cursor-pointer items-center justify-center rounded-md text-muted-foreground/60 transition-colors hover:bg-accent hover:text-foreground"
+                    className="inline-flex size-5 cursor-pointer items-center justify-center text-black"
                     onClick={openAddProject}
+                    data-retro-button="true"
                   />
                 }
               >
@@ -2777,10 +2768,69 @@ const SidebarProjectsContent = memo(function SidebarProjectsContent(
         )}
 
         {projectsLength === 0 && (
-          <div className="px-2 pt-4 text-center text-xs text-muted-foreground/60">
-            No projects yet
-          </div>
+          <div className="px-2 pt-4 text-center text-xs text-muted-foreground">No projects yet</div>
         )}
+      </SidebarGroup>
+      <SidebarGroup className="px-2 py-2">
+        <div className="retro-section-header mb-0 flex items-center justify-between px-2 py-1">
+          <span className="text-xs font-bold">Search Threads</span>
+          <button type="button" className="size-5" data-retro-button="true" aria-label="Collapse">
+            -
+          </button>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-3">
+          <SearchIcon className="size-4 shrink-0 text-[#1c2b70]" />
+          <div className="retro-sidebar-input h-7 min-w-0 flex-1" />
+          <CommandDialogTrigger
+            render={<button type="button" className="h-7 px-4 text-xs" data-retro-button="true" />}
+          >
+            Search
+          </CommandDialogTrigger>
+        </div>
+      </SidebarGroup>
+      <SidebarGroup className="px-2 py-2">
+        <div className="retro-section-header mb-0 flex items-center justify-between px-2 py-1">
+          <span className="text-xs font-bold">Quick Links</span>
+          <button type="button" className="size-5" data-retro-button="true" aria-label="Collapse">
+            -
+          </button>
+        </div>
+        <div className="grid gap-1 px-4 py-2 text-xs">
+          <button
+            type="button"
+            className="flex justify-between text-left text-[var(--retro-link)] underline"
+            disabled={!sortedProjects[0]}
+            onClick={() => {
+              const project = sortedProjects[0]?.memberProjects[0];
+              if (!project) return;
+              void handleNewThread(scopeProjectRef(project.environmentId, project.id), {
+                envMode: "local",
+              });
+            }}
+          >
+            <span>New Thread</span>
+            <span>{newThreadShortcutLabel ?? "Ctrl+N"}</span>
+          </button>
+          <CommandDialogTrigger
+            render={
+              <button
+                type="button"
+                className="flex justify-between text-left text-[var(--retro-link)] underline"
+              />
+            }
+          >
+            <span>Command Palette</span>
+            <span>{commandPaletteShortcutLabel ?? "Ctrl+K"}</span>
+          </CommandDialogTrigger>
+          <Link to="/settings" className="flex justify-between text-[var(--retro-link)] underline">
+            <span>Settings</span>
+            <span>Ctrl+,</span>
+          </Link>
+          <a href="https://github.com/t3tools/t3" className="flex justify-between underline">
+            <span>Help</span>
+            <span>F1</span>
+          </a>
+        </div>
       </SidebarGroup>
     </SidebarContent>
   );

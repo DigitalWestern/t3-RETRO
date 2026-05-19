@@ -170,5 +170,9 @@ export function resolveElectronPath() {
     return electronBinaryPath;
   }
 
+  if (isDevelopment) {
+    return electronBinaryPath;
+  }
+
   return buildMacLauncher(electronBinaryPath);
 }

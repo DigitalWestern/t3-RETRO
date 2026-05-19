@@ -69,7 +69,7 @@ function startApp() {
 
   const app = spawn(
     resolveElectronPath(),
-    [`--t3code-dev-root=${desktopDir}`, "dist-electron/main.cjs"],
+    ["--disable-gpu", `--t3code-dev-root=${desktopDir}`, "dist-electron/main.cjs"],
     {
       cwd: desktopDir,
       env: childEnv,

@@ -146,7 +146,6 @@ import { ChatComposer, type ChatComposerHandle } from "./chat/ChatComposer";
 import { ExpandedImageDialog } from "./chat/ExpandedImageDialog";
 import { PullRequestThreadDialog } from "./PullRequestThreadDialog";
 import { MessagesTimeline } from "./chat/MessagesTimeline";
-import { ChatHeader } from "./chat/ChatHeader";
 import { type ExpandedImagePreview } from "./chat/ExpandedImagePreview";
 import { NoActiveThreadState } from "./NoActiveThreadState";
 import { resolveEffectiveEnvMode, resolveEnvironmentOptionLabel } from "./BranchToolbar.logic";
@@ -610,7 +609,7 @@ export default function ChatView(props: ChatViewProps) {
     threadId,
     routeKind,
     onDiffPanelOpen,
-    reserveTitleBarControlInset = true,
+    reserveTitleBarControlInset: _reserveTitleBarControlInset = true,
   } = props;
   const draftId = routeKind === "draft" ? props.draftId : null;
   const routeThreadRef = useMemo(
@@ -722,7 +721,7 @@ export default function ChatView(props: ChatViewProps) {
   const [pendingServerThreadEnvMode, setPendingServerThreadEnvMode] =
     useState<DraftThreadEnvMode | null>(null);
   const [pendingServerThreadBranch, setPendingServerThreadBranch] = useState<string | null>();
-  const [lastInvokedScriptByProjectId, setLastInvokedScriptByProjectId] = useLocalStorage(
+  const [_lastInvokedScriptByProjectId, setLastInvokedScriptByProjectId] = useLocalStorage(
     LAST_INVOKED_SCRIPT_BY_PROJECT_KEY,
     {},
     LastInvokedScriptByProjectSchema,
@@ -1632,7 +1631,7 @@ export default function ChatView(props: ChatViewProps) {
     : null;
   const gitStatusQuery = useGitStatus({ environmentId, cwd: gitCwd });
   const keybindings = useServerKeybindings();
-  const availableEditors = useServerAvailableEditors();
+  const _availableEditors = useServerAvailableEditors();
   // Prefer an instance-id match so a custom Codex instance (e.g.
   // `codex_personal`) surfaces its own status/message in the banner rather
   // than the default Codex's. Falls back to first-match-by-kind when no
@@ -1678,7 +1677,7 @@ export default function ChatView(props: ChatViewProps) {
     }),
     [terminalState.terminalOpen],
   );
-  const terminalToggleShortcutLabel = useMemo(
+  const _terminalToggleShortcutLabel = useMemo(
     () => shortcutLabelForCommand(keybindings, "terminal.toggle"),
     [keybindings],
   );
@@ -1694,7 +1693,7 @@ export default function ChatView(props: ChatViewProps) {
     () => shortcutLabelForCommand(keybindings, "terminal.close", terminalShortcutLabelOptions),
     [keybindings, terminalShortcutLabelOptions],
   );
-  const diffPanelShortcutLabel = useMemo(
+  const _diffPanelShortcutLabel = useMemo(
     () => shortcutLabelForCommand(keybindings, "diff.toggle", nonTerminalShortcutLabelOptions),
     [keybindings, nonTerminalShortcutLabelOptions],
   );
@@ -1990,7 +1989,7 @@ export default function ChatView(props: ChatViewProps) {
     },
     [environmentId],
   );
-  const saveProjectScript = useCallback(
+  const _saveProjectScript = useCallback(
     async (input: NewProjectScriptInput) => {
       if (!activeProject) return;
       const nextId = nextProjectScriptId(
@@ -2024,7 +2023,7 @@ export default function ChatView(props: ChatViewProps) {
     },
     [activeProject, persistProjectScripts],
   );
-  const updateProjectScript = useCallback(
+  const _updateProjectScript = useCallback(
     async (scriptId: string, input: NewProjectScriptInput) => {
       if (!activeProject) return;
       const existingScript = activeProject.scripts.find((script) => script.id === scriptId);
@@ -2058,7 +2057,7 @@ export default function ChatView(props: ChatViewProps) {
     },
     [activeProject, persistProjectScripts],
   );
-  const deleteProjectScript = useCallback(
+  const _deleteProjectScript = useCallback(
     async (scriptId: string) => {
       if (!activeProject) return;
       const nextScripts = activeProject.scripts.filter((script) => script.id !== scriptId);
@@ -2911,7 +2910,7 @@ export default function ChatView(props: ChatViewProps) {
     }
   };
 
-  const onInterrupt = async () => {
+  const onInterrupt = useCallback(async () => {
     const api = readEnvironmentApi(environmentId);
     if (!api || !activeThread) return;
     await api.orchestration.dispatchCommand({
@@ -2920,7 +2919,31 @@ export default function ChatView(props: ChatViewProps) {
       threadId: activeThread.id,
       createdAt: new Date().toISOString(),
     });
-  };
+  }, [activeThread, environmentId]);
+
+  useEffect(() => {
+    const handleRetroCommand = (event: Event) => {
+      const command = (event as CustomEvent<string>).detail;
+      if (command === "terminal") {
+        toggleTerminalVisibility();
+        return;
+      }
+      if (command === "diff") {
+        onToggleDiff();
+        return;
+      }
+      if (command === "interrupt") {
+        void onInterrupt();
+        return;
+      }
+      if (command === "focus-composer") {
+        focusComposer();
+      }
+    };
+
+    window.addEventListener("t3-retro-command", handleRetroCommand);
+    return () => window.removeEventListener("t3-retro-command", handleRetroCommand);
+  }, [focusComposer, onToggleDiff, toggleTerminalVisibility, onInterrupt]);
 
   const onRespondToApproval = useCallback(
     async (requestId: ApprovalRequestId, decision: ProviderApprovalDecision) => {
@@ -3497,49 +3520,7 @@ export default function ChatView(props: ChatViewProps) {
   }
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden bg-background">
-      {/* Top bar */}
-      <header
-        className={cn(
-          "border-b border-border",
-          isElectron
-            ? cn(
-                "drag-region flex h-[52px] items-center px-3 sm:px-5 wco:h-[env(titlebar-area-height)]",
-                reserveTitleBarControlInset &&
-                  "wco:pr-[calc(100vw-env(titlebar-area-width)-env(titlebar-area-x)+1em)]",
-              )
-            : "pb-2 pl-[calc(env(safe-area-inset-left)+0.75rem)] pr-[calc(env(safe-area-inset-right)+0.75rem)] pt-2 sm:pb-3 sm:pl-[calc(env(safe-area-inset-left)+1.25rem)] sm:pr-[calc(env(safe-area-inset-right)+1.25rem)] sm:pt-3",
-        )}
-      >
-        <ChatHeader
-          activeThreadEnvironmentId={activeThread.environmentId}
-          activeThreadId={activeThread.id}
-          {...(routeKind === "draft" && draftId ? { draftId } : {})}
-          activeThreadTitle={activeThread.title}
-          activeProjectName={activeProject?.name}
-          isGitRepo={isGitRepo}
-          openInCwd={gitCwd}
-          activeProjectScripts={activeProject?.scripts}
-          preferredScriptId={
-            activeProject ? (lastInvokedScriptByProjectId[activeProject.id] ?? null) : null
-          }
-          keybindings={keybindings}
-          availableEditors={availableEditors}
-          terminalAvailable={activeProject !== undefined}
-          terminalOpen={terminalState.terminalOpen}
-          terminalToggleShortcutLabel={terminalToggleShortcutLabel}
-          diffToggleShortcutLabel={diffPanelShortcutLabel}
-          gitCwd={gitCwd}
-          diffOpen={diffOpen}
-          onRunProjectScript={runProjectScript}
-          onAddProjectScript={saveProjectScript}
-          onUpdateProjectScript={updateProjectScript}
-          onDeleteProjectScript={deleteProjectScript}
-          onToggleTerminal={toggleTerminalVisibility}
-          onToggleDiff={onToggleDiff}
-        />
-      </header>
-
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden bg-[var(--retro-chrome)]">
       {/* Error banner */}
       <ProviderStatusBanner status={activeProviderStatus} />
       <ThreadErrorBanner
@@ -3547,9 +3528,34 @@ export default function ChatView(props: ChatViewProps) {
         onDismiss={() => setThreadError(activeThread.id, null)}
       />
       {/* Main content area with optional plan sidebar */}
-      <div className="flex min-h-0 min-w-0 flex-1">
+      <div className="flex min-h-0 min-w-0 flex-1 bg-[var(--retro-chrome)] p-1">
         {/* Chat column */}
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="retro-section-panel flex min-h-0 min-w-0 flex-1 flex-col">
+          <div className="retro-section-header retro-thread-header flex min-h-[34px] items-center gap-2 px-3">
+            <span className="text-lg" aria-hidden="true">
+              ▧
+            </span>
+            <span className="min-w-0 truncate text-base font-bold">
+              Thread: {activeThread.title}
+            </span>
+          </div>
+          <div className="retro-thread-meta flex min-h-[35px] flex-wrap items-center gap-x-5 gap-y-1 border-b border-[#b0b0b0] bg-white px-3 text-sm">
+            <span>
+              Project: <strong>{activeProject?.name ?? "None"}</strong>
+            </span>
+            <span>
+              Environment: <strong className="text-[var(--retro-green)]">main</strong>
+            </span>
+            <span>
+              Provider: <a href="#">Codex</a>
+            </span>
+            <span>
+              Model: <a href="#">codex-1</a>
+            </span>
+            <span>
+              Runtime: <a href="#">Auto</a>
+            </span>
+          </div>
           {/* Messages Wrapper */}
           <div className="relative flex min-h-0 flex-1 flex-col">
             {/* Messages — LegendList handles virtualization and scrolling internally */}
@@ -3597,7 +3603,7 @@ export default function ChatView(props: ChatViewProps) {
           {/* Input bar */}
           <div
             className={cn(
-              "pl-[calc(env(safe-area-inset-left)+0.75rem)] pr-[calc(env(safe-area-inset-right)+0.75rem)] pt-1.5 sm:pl-[calc(env(safe-area-inset-left)+1.25rem)] sm:pr-[calc(env(safe-area-inset-right)+1.25rem)] sm:pt-2",
+              "border-t border-[#7b9fd5] bg-[#cfe1ff] pl-[calc(env(safe-area-inset-left)+0.5rem)] pr-[calc(env(safe-area-inset-right)+0.5rem)] pt-1.5 sm:pl-[calc(env(safe-area-inset-left)+0.75rem)] sm:pr-[calc(env(safe-area-inset-right)+0.75rem)] sm:pt-2",
               isGitRepo
                 ? "pb-[calc(env(safe-area-inset-bottom)+0.25rem)]"
                 : "pb-[calc(env(safe-area-inset-bottom)+0.75rem)] sm:pb-[calc(env(safe-area-inset-bottom)+1rem)]",
