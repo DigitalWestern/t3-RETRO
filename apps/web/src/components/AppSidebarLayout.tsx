@@ -1,4 +1,4 @@
-import { useEffect, type ComponentType, type ReactNode } from "react";
+import { useEffect, type ComponentType, type CSSProperties, type ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   ArchiveIcon,
@@ -15,6 +15,7 @@ import {
 
 import ThreadSidebar from "./Sidebar";
 import { Sidebar, SidebarProvider } from "./ui/sidebar";
+import { selectThreadTerminalState, useTerminalStateStore } from "../terminalStateStore";
 import {
   clearShortcutModifierState,
   syncShortcutModifierStateFromKeyboardEvent,
@@ -58,7 +59,10 @@ function RetroToolbarButton({
 export function AppSidebarLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const setCommandPaletteOpen = useCommandPaletteStore((store) => store.setOpen);
-  const { defaultProjectRef, handleNewThread } = useHandleNewThread();
+  const { defaultProjectRef, handleNewThread, routeThreadRef } = useHandleNewThread();
+  const activeTerminalState = useTerminalStateStore((state) =>
+    selectThreadTerminalState(state.terminalStateByThreadKey, routeThreadRef),
+  );
 
   const handleNewThreadClick = () => {
     if (!defaultProjectRef) return;
@@ -105,7 +109,17 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
   }, [navigate]);
 
   return (
-    <div className="retro-app-window flex h-dvh min-h-0 flex-col">
+    <div
+      className="retro-app-window flex h-dvh min-h-0 flex-col"
+      data-terminal-open={activeTerminalState.terminalOpen ? "true" : undefined}
+      style={
+        activeTerminalState.terminalOpen
+          ? ({
+              "--retro-active-terminal-height": `${activeTerminalState.terminalHeight}px`,
+            } as CSSProperties)
+          : undefined
+      }
+    >
       <header className="retro-app-chrome drag-region shrink-0">
         <div className="retro-window-titlebar retro-global-titlebar">
           <div className="retro-title-control-bay" aria-hidden="true">
